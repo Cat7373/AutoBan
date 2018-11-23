@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-import os
 import re
 from funcs import *
 
@@ -25,49 +24,47 @@ extraIptablesRules = """
 """
 
 
-def get_last_log_file(log_dir):
-    file_names = [os.path.join(log_dir, fileName) for fileName in os.listdir(log_dir)]
-    create_times = [(fileName, os.path.getctime(fileName)) for fileName in file_names]
-    create_times = sorted(create_times, key=lambda t: t[1], reverse=True)
-    if len(create_times) > 0:
-        return create_times[0][0]
-    return None
-
-
+# 执行 shell 命令
 def exec_cmd(cmd):
     print('exec: %s' % cmd)
     os.system(cmd)
 
 
+# 读取日志中的 IP
+def read_log_ips():
+    log_file_name = get_last_create_file(logDir)
+    if log_file_name is None:
+        return []
+    else:
+        log_ips = [r.search(line) for line in read_lines(log_file_name)]
+        log_ips = filter(lambda m: m is not None, log_ips)
+        log_ips = map(lambda m: m.group(1), log_ips)
+        return [ip for ip in log_ips]
+
+
+# 读取配置文件中的 IP
+def read_conf_ips():
+    return [ip for ip in read_lines(confFile)]
+
+
 # TODO 重构
 def main():
     # 读取日志中的 IP
-    # TODO 目录为空时报错
-    log_file_name = get_last_log_file(logDir)
-    log_ips = [r.search(line) for line in read_lines(log_file_name)]
-    log_ips = filter(lambda m: m is not None, log_ips)
-    log_ips = map(lambda m: m.group(1), log_ips)
-    log_ips = [ip for ip in log_ips]
+    log_ips = read_log_ips()
     print('log ips: %s' % log_ips)
 
     # 读取配置文件中的 IP
-    # TODO 不再在 git 仓库中包含空白的配置文件，不存在时这里先不做读取，如果有从日志中读到 IP，后面会自动创建的
-    conf_ips = [ip for ip in read_lines(confFile)]
+    conf_ips = read_conf_ips()
     print('conf ips: %s' % conf_ips)
 
     # 合并去重排序
-    # TODO 未变动时不再做必要的更新
-    ips = sorted(filter(lambda ip: len(ip) > 0, list(set(log_ips + conf_ips))), key=ip2int)
+    new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
 
     # 写入配置文件
-    # TODO 目录不存在时自动创建
-    with open(confFile, 'w') as f:
-        for ip in ips:
-            f.write(ip)
-            f.write('\n')
+    write_lines(confFile, new_ips)
 
     # 计算封禁规则
-    ips = [ip for ip in map(ip2int, ips)]
+    ips = [ip for ip in map(ip2int, new_ips)]
     mask_bans = []
     for mask in range(minMask, maxMask + 1):
         # 应该抛弃多少位
