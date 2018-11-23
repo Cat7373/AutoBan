@@ -38,7 +38,7 @@ def read_lines(file_name):
     :return 每一行的内容的迭代器
     """
     if not os.path.exists(file_name):
-        return range(0)
+        return
     with open(file_name) as f:
         while True:
             line = f.readline()
