@@ -68,11 +68,11 @@ def update_rules(old_rules, new_rules):
     add_rules = sub_list(new_rules, old_rules)
 
     for ip in remove_rules:
-        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
-        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
+        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
+        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
     for ip in add_rules:
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
 
 
 def main():
