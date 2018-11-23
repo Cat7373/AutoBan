@@ -1,27 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-import re
 from funcs import *
-
-# 最小和最大掩码，IP 数量计算公式：2 ** (32 - mask)
-minMask = 8
-maxMask = 27
-# 封禁一个段要求这个段中的 IP 达到的比例
-minRatio = 0.10
-# 日志文件所在目录
-logDir = 'log'
-# 配置文件
-confFile = 'conf/ips.txt'
-# 从日志中匹配 IP 地址的正则
-r = re.compile('(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$')
-# 封禁的端口
-banPort = 7373
-# 扩展规则
-extraIptablesRules = """
-/sbin/iptables -F
-/sbin/iptables -A INPUT -i eth0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,URG RST -j DROP
-"""
+import conf
 
 
 # 执行 shell 命令
@@ -32,11 +13,11 @@ def exec_cmd(cmd):
 
 # 读取日志中的 IP
 def read_log_ips():
-    log_file_name = get_last_create_file(logDir)
+    log_file_name = get_last_create_file(conf.logDir)
     if log_file_name is None:
         return []
     else:
-        log_ips = [r.search(line) for line in read_lines(log_file_name)]
+        log_ips = [conf.r.search(line) for line in read_lines(log_file_name)]
         log_ips = filter(lambda m: m is not None, log_ips)
         log_ips = map(lambda m: m.group(1), log_ips)
         return [ip for ip in log_ips]
@@ -44,7 +25,7 @@ def read_log_ips():
 
 # 读取配置文件中的 IP
 def read_conf_ips():
-    return [ip for ip in read_lines(confFile)]
+    return [ip for ip in read_lines(conf.confFile)]
 
 
 # TODO 重构
@@ -61,16 +42,16 @@ def main():
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
 
     # 写入配置文件
-    write_lines(confFile, new_ips)
+    write_lines(conf.confFile, new_ips)
 
     # 计算封禁规则
     ips = [ip for ip in map(ip2int, new_ips)]
     mask_bans = []
-    for mask in range(minMask, maxMask + 1):
+    for mask in range(conf.minMask, conf.maxMask + 1):
         # 应该抛弃多少位
         shr = 32 - mask
         # 超过多少个 IP 应该封段
-        min_ip_count = int(2 ** (32 - mask) * minRatio)
+        min_ip_count = int(2 ** (32 - mask) * conf.minRatio)
         # 各个段的 IP 数
         mask_ip_count = {}
         for ip in ips:
@@ -96,14 +77,14 @@ def main():
     #  入参为 --init-rules 时做全量添加
     #  入参为 --reset-rules 时同时执行 iptables -F
     print('exec iptables rule cmds:')
-    for cmd in filter(lambda c: len(c) > 0, extraIptablesRules.split('\n')):
+    for cmd in filter(lambda c: len(c) > 0, conf.extraIptablesRules.split('\n')):
         exec_cmd(cmd)
     for t in mask_bans:
-        exec_cmd('/sbin/iptables -A INPUT -s %s/%d -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(t[0] << (32 - t[1])), t[1], banPort))
-        exec_cmd('/sbin/iptables -A INPUT -s %s/%d -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(t[0] << (32 - t[1])), t[1], banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s/%d -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(t[0] << (32 - t[1])), t[1], conf.banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s/%d -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(t[0] << (32 - t[1])), t[1], conf.banPort))
     for ip in ips:
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), banPort))
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
+        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (int2ip(ip), conf.banPort))
 
 
 if __name__ == '__main__':

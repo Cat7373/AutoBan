@@ -37,7 +37,8 @@ def read_lines(file_name):
     :param file_name 被读取的文件的文件名
     :return 每一行的内容的迭代器
     """
-    # TODO 文件不存在时直接返回
+    if not os.path.exists(file_name):
+        return range(0)
     with open(file_name) as f:
         while True:
             line = f.readline()
@@ -52,7 +53,11 @@ def write_lines(file_name, lines):
     :param file_name: 被写入的文件的文件名
     :param lines: 要写入的行列表(行尾不应有 \n)
     """
-    # TODO 目录不存在时自动创建
+    # 目录不存在时自动创建
+    dir_name = os.path.dirname(file_name)
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+    # 写出数据
     with open(file_name, 'w') as f:
         for line in lines:
             f.write(line)
