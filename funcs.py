@@ -85,7 +85,7 @@ def get_last_create_file(dir_name):
         return None
     create_times = [(fileName, os.path.getctime(fileName)) for fileName in file_names]
     create_times = max(create_times, key=lambda t: t[1])
-    return create_times[0][0]
+    return create_times[0]
 
 
 def __unit_test():

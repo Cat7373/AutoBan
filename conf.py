@@ -13,7 +13,7 @@ logDir = 'log'
 # 配置文件
 confFile = 'conf/ips.txt'
 # 从日志中匹配 IP 地址的正则
-r = re.compile('(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$')
+r = re.compile(r'(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$')
 # 封禁的端口 # TODO 支持多个
 banPort = 7373
 # 重置时额外添加的规则
