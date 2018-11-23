@@ -32,7 +32,7 @@ def read_conf_ips():
 
 # 计算封禁的 IP 规则
 def calc_iptables_ban_rules(ips):
-    ban_ips = [ip for ip in map(ip2int, ips)]
+    ban_ips = [ip2int(ip) for ip in ips]
     mask_bans = []
     for mask in range(conf.minMask, conf.maxMask + 1):
         # 应该抛弃多少位
@@ -56,7 +56,7 @@ def calc_iptables_ban_rules(ips):
             for ip in remove_ips:
                 ban_ips.remove(ip)
     for ip in ban_ips:
-        mask_bans += (ip, 32)
+        mask_bans.append((ip, 32))
     return ['%s/%d' % (int2ip(t[0] << (32 - t[1])), t[1]) for t in mask_bans]
 
 
@@ -107,6 +107,8 @@ def main():
             for cmd in filter(lambda c: len(c) > 0, conf.resetIptablesRules.split('\n')):
                 exec_cmd(cmd)
     update_rules(calc_iptables_ban_rules(conf_ips), ban_ips)
+
+    print('done.')
 
 
 if __name__ == '__main__':
