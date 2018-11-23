@@ -16,8 +16,7 @@ confFile = 'conf/ips.txt'
 r = re.compile('(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$')
 # 封禁的端口 # TODO 支持多个
 banPort = 7373
-# 扩展规则
-extraIptablesRules = """
-/sbin/iptables -F
+# 重置时额外添加的规则
+resetIptablesRules = """
 /sbin/iptables -A INPUT -i eth0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,URG RST -j DROP
 """

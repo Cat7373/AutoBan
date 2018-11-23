@@ -31,6 +31,16 @@ def ip2int(ip):
     return num
 
 
+def sub_list(subtracted, subtraction):
+    """
+    list 减法(求差集)
+    :param subtracted: 被减数(list)
+    :param subtraction: 减数(list)
+    :return: 差集
+    """
+    return [e for e in subtracted if e not in subtraction]
+
+
 def read_lines(file_name):
     """
     按行读取文件
@@ -84,6 +94,8 @@ def __unit_test():
     """
     assert ip2int('11.22.33.44') == 185999660
     assert int2ip(185999660) == '11.22.33.44'
+    assert sub_list([1, 2, 3], [2, 3, 4]) == [1]
+    assert sub_list([2, 3, 4], [1, 2, 3]) == [4]
 
     print('done.')
 
