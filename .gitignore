@@ -1,3 +1,7 @@
+# Application Runtime Files
+log/
+conf/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
