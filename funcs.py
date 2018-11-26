@@ -7,8 +7,8 @@ import os
 def int2ip(num):
     """
     将数字转换为 IPv4 地址
-    :param num 输入的数字
-    :return 转换的 IPv4 地址字符串
+    :param num: 输入的数字
+    :return: 转换的 IPv4 地址字符串
     """
     ip = ''
     for i in range(4):
@@ -20,8 +20,8 @@ def int2ip(num):
 def ip2int(ip):
     """
     将 IPv4 地址转换为数字
-    :param ip IPv4 地址
-    :return 转换的数字
+    :param ip: IPv4 地址
+    :return: 转换的数字
     """
     mul = 3
     num = 0
@@ -44,8 +44,8 @@ def sub_list(subtracted, subtraction):
 def read_lines(file_name):
     """
     按行读取文件
-    :param file_name 被读取的文件的文件名
-    :return 每一行的内容的迭代器
+    :param file_name: 被读取的文件的文件名
+    :return: 每一行的内容的迭代器
     """
     if not os.path.exists(file_name):
         return
@@ -74,18 +74,20 @@ def write_lines(file_name, lines):
             f.write('\n')
 
 
-def get_last_create_file(dir_name):
+def get_last_modify_file(dir_name, count=1):
     """
-    获取目录中最晚创建的文件
+    获取目录中最晚修改的文件
     :param dir_name: 目录的全路径
-    :return: 这个目录中最晚创建的文件，如果这是个空目录，则返回 None
+    :param count: 要获取的文件的数量
+    :return: 这个目录中最晚修改的文件名的迭代器
     """
     file_names = [os.path.join(dir_name, fileName) for fileName in os.listdir(dir_name)]
     if len(file_names) is 0:
-        return None
-    create_times = [(fileName, os.path.getctime(fileName)) for fileName in file_names]
-    create_times = max(create_times, key=lambda t: t[1])
-    return create_times[0]
+        return
+    modify_times = [(fileName, os.path.getmtime(fileName)) for fileName in file_names]
+    modify_times = sorted(modify_times, key=lambda t: t[1], reverse=True)
+    for (fileName, _) in modify_times[:count]:
+        yield fileName
 
 
 def __unit_test():

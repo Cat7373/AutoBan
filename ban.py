@@ -5,6 +5,7 @@
 import sys
 from funcs import *
 import conf
+# TODO logging
 
 
 # 执行 shell 命令
@@ -15,14 +16,17 @@ def exec_cmd(cmd):
 
 # 读取日志中的 IP
 def read_log_ips():
-    log_file_name = get_last_create_file(conf.logDir)
-    if log_file_name is None:
-        return []
-    else:
-        log_ips = [conf.r.search(line) for line in read_lines(log_file_name)]
-        log_ips = filter(lambda m: m is not None, log_ips)
-        log_ips = map(lambda m: m.group(1), log_ips)
-        return [ip for ip in log_ips]
+    for log_dir in conf.logs:
+        dir_conf = conf.logs[log_dir]
+
+        # 读出符合条件的文件
+        for log_file_name in get_last_modify_file(log_dir, dir_conf['count']):
+            for regex in dir_conf['regex']:
+                log_ips = [regex.search(line) for line in read_lines(log_file_name)]
+                log_ips = filter(lambda m: m is not None, log_ips)
+                log_ips = map(lambda m: m.group(1), log_ips)
+                for ip in log_ips:
+                    yield ip
 
 
 # 读取配置文件中的 IP
@@ -68,16 +72,16 @@ def update_rules(old_rules, new_rules):
     add_rules = sub_list(new_rules, old_rules)
 
     for ip in remove_rules:
-        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
-        exec_cmd('/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
+        for cmd in conf.gen_ban_cmd(ip, 'remove'):
+            exec_cmd(cmd)
     for ip in add_rules:
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
-        exec_cmd('/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport %d -m comment --comment autoban -j DROP' % (ip, conf.banPort))
+        for cmd in conf.gen_ban_cmd(ip, 'add'):
+            exec_cmd(cmd)
 
 
 def main():
     # 读取日志中的 IP
-    log_ips = read_log_ips()
+    log_ips = [ip for ip in read_log_ips()]
     print('log ips: %s' % log_ips)
 
     # 读取配置文件中的 IP
