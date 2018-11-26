@@ -42,8 +42,8 @@ def gen_ban_cmd(ip, mode):
     :return: 生成的命令的迭代器
     """
     if mode == 'add':
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m tcp --dport 7373 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m udp --dport 7373 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
     elif mode == 'remove':
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m tcp --dport 7373 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m udp --dport 7373 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
