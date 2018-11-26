@@ -2,16 +2,22 @@
 # -*- coding: UTF-8 -*-
 
 
-import sys
 from funcs import *
 import conf
+from optparse import OptionParser
 # TODO logging
+
+
+options = {}
 
 
 # 执行 shell 命令
 def exec_cmd(cmd):
+    global options
+
     print('exec: %s' % cmd)
-    os.system(cmd)
+    if not options.test:
+        os.system(cmd)
 
 
 # 读取日志中的 IP
@@ -80,6 +86,13 @@ def update_rules(old_rules, new_rules):
 
 
 def main():
+    global options
+    parser = OptionParser()
+    parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
+    parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
+    parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
+    (options, _) = parser.parse_args()
+
     # 读取日志中的 IP
     log_ips = [ip for ip in read_log_ips()]
     print('log ips: %s' % log_ips)
@@ -92,7 +105,8 @@ def main():
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
 
     # 写入配置文件
-    write_lines(conf.confFile, new_ips)
+    if not options.test:
+        write_lines(conf.confFile, new_ips)
 
     # 计算封禁规则
     ban_ips = calc_iptables_ban_rules(new_ips)
@@ -100,16 +114,15 @@ def main():
 
     # 应用到 iptables 中
     print('exec iptables rule cmds:')
-    if len(sys.argv) > 1:
-        if sys.argv[1] == '--init-rules':
-            # 全量添加
-            conf_ips = []
-        elif sys.argv[1] == '--reset-rules':
-            # 重置 + 全量添加
-            conf_ips = []
-            exec_cmd('/sbin/iptables -F')
-            for cmd in filter(lambda c: len(c) > 0, conf.resetIptablesRules.split('\n')):
-                exec_cmd(cmd)
+    if options.init_rules:
+        # 全量添加
+        conf_ips = []
+    if options.reset_rules:
+        # 重置 + 全量添加
+        conf_ips = []
+        exec_cmd('/sbin/iptables -F')
+        for cmd in filter(lambda c: len(c) > 0, conf.resetIptablesRules.split('\n')):
+            exec_cmd(cmd)
     update_rules(calc_iptables_ban_rules(conf_ips), ban_ips)
 
     print('done.')
