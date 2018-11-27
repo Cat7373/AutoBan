@@ -5,17 +5,17 @@
 from funcs import *
 import conf
 from optparse import OptionParser
-# TODO logging
+import logging
 
 
-options = {}
+options = None
 
 
 # 执行 shell 命令
 def exec_cmd(cmd):
     global options
 
-    print('exec: %s' % cmd)
+    logging.debug('exec: %s' % cmd)
     if not options.test:
         os.system(cmd)
 
@@ -88,19 +88,14 @@ def update_rules(old_rules, new_rules):
 
 def main():
     global options
-    parser = OptionParser()
-    parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
-    parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
-    parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
-    (options, _) = parser.parse_args()
 
     # 读取日志中的 IP
     log_ips = [ip for ip in read_log_ips()]
-    print('log ips: %s' % log_ips)
+    logging.debug('log ips: %s' % log_ips)
 
     # 读取配置文件中的 IP
     conf_ips = read_conf_ips()
-    print('conf ips: %s' % conf_ips)
+    logging.debug('conf ips: %s' % conf_ips)
 
     # 合并去重排序
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
@@ -111,10 +106,10 @@ def main():
 
     # 计算封禁规则
     ban_ips = calc_iptables_ban_rules(new_ips)
-    print('ban_ips: %s' % ban_ips)
+    logging.debug('ban_ips: %s' % ban_ips)
 
     # 应用到 iptables 中
-    print('exec iptables rule cmds:')
+    logging.debug('exec iptables rule cmds:')
     if options.init_rules:
         # 全量添加
         conf_ips = []
@@ -126,8 +121,26 @@ def main():
             exec_cmd(cmd)
     update_rules(calc_iptables_ban_rules(conf_ips), ban_ips)
 
-    print('done.')
+    logging.info('done.')
+
+
+def init():
+    global options
+    parser = OptionParser()
+    parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
+    parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
+    parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
+    parser.add_option('--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
+    (options, _) = parser.parse_args()
+
+    logging_level = logging.INFO
+    if options.debug:
+        logging_level = logging.DEBUG
+    logging.basicConfig(level=logging_level,
+                        format='[%(asctime)s] [%(levelname)s]: %(message)s',
+                        datefmt='%H:%M:%S')
 
 
 if __name__ == '__main__':
+    init()
     main()
