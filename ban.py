@@ -27,12 +27,13 @@ def read_log_ips():
 
         # 读出符合条件的文件
         for log_file_name in get_last_modify_file(log_dir, dir_conf['count']):
-            for regex in dir_conf['regex']:
-                log_ips = [regex.search(line) for line in read_lines(log_file_name)]
-                log_ips = filter(lambda m: m is not None, log_ips)
-                log_ips = map(lambda m: m.group(1), log_ips)
-                for ip in log_ips:
-                    yield ip
+            for line in read_lines(log_file_name):
+                for (r, g) in dir_conf['regex'].items():
+                    m = r.search(line)
+                    if m is not None:
+                        ip = m.group(g)
+                        yield ip
+                        break
 
 
 # 读取配置文件中的 IP
