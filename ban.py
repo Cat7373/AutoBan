@@ -15,7 +15,7 @@ options = None
 def exec_cmd(cmd):
     global options
 
-    logging.debug('exec: %s' % cmd)
+    logging.info('exec: %s' % cmd)
     if not options.test:
         os.system(cmd)
 
@@ -101,12 +101,13 @@ def main():
     global options
 
     # 读取日志中的 IP
-    log_ips = [ip for ip in read_log_ips()]
-    logging.debug('log ips: %s' % log_ips)
-
+    log_ips = list(set([ip for ip in read_log_ips()]))
     # 读取配置文件中的 IP
     conf_ips = read_conf_ips()
+
+    logging.debug('log ips: %s' % log_ips)
     logging.debug('conf ips: %s' % conf_ips)
+    logging.info('new ips: %s' % sub_list(log_ips, conf_ips))
 
     # 合并去重排序
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
@@ -120,7 +121,7 @@ def main():
     logging.debug('ban_ips: %s' % ban_ips)
 
     # 应用到 iptables 中
-    logging.debug('exec iptables rule cmds:')
+    logging.info('exec iptables rule cmds:')
     if options.init_rules:
         # 全量添加
         conf_ips = []
