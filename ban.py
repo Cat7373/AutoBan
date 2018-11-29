@@ -45,11 +45,20 @@ def read_conf_ips():
 def calc_iptables_ban_rules(ips):
     ban_ips = [ip2int(ip) for ip in ips]
     mask_bans = []
-    for mask in range(conf.minMask, conf.maxMask + 1):
+    for mask in range(len(conf.masks)):
         # 应该抛弃多少位
         shr = 32 - mask
+        # 当前段中的总 IP 数量
+        mask_ip_count = 2 ** (32 - mask)
         # 超过多少个 IP 应该封段
-        min_ip_count = int(2 ** (32 - mask) * conf.minRatio)
+        min_ip_count = conf.masks[mask]
+        if min_ip_count is None:
+            continue
+        assert min_ip_count < mask_ip_count
+        assert min_ip_count > 0
+        if min_ip_count < 1:
+            min_ip_count = max(int(mask_ip_count * min_ip_count), 1)
+
         # 各个段的 IP 数
         mask_ip_count = {}
         for ip in ban_ips:
@@ -86,6 +95,7 @@ def update_rules(old_rules, new_rules):
             exec_cmd(cmd)
 
 
+# TODO IPv6?
 def main():
     global options
 
