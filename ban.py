@@ -57,7 +57,8 @@ def calc_iptables_ban_rules(ips):
         assert min_ip_count < mask_ip_count
         assert min_ip_count > 0
         if min_ip_count < 1:
-            min_ip_count = max(int(mask_ip_count * min_ip_count), 1)
+            min_ip_count = mask_ip_count * min_ip_count
+        min_ip_count = max(int(min_ip_count), 1)
 
         # 各个段的 IP 数
         mask_ip_count = {}

@@ -61,7 +61,8 @@ logs = {
     'log/app3': {
         'count': 2,
         'regex': {
-            re.compile(r'Disconnected from invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1
+            re.compile(r'Disconnected from invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1,
+            re.compile(r'Connection closed by invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1
         }
     }
 }
@@ -82,8 +83,8 @@ def gen_ban_cmd(ip, mode):
     :return: 生成的命令的迭代器
     """
     if mode == 'add':
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
     elif mode == 'remove':
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m multiport --dports 7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
