@@ -61,8 +61,8 @@ logs = {
     'log/app3': {
         'count': 2,
         'regex': {
-            re.compile(r'Disconnected from invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1,
-            re.compile(r'Connection closed by invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1
+            re.compile(r'Disconnected from invalid user [^\s]* (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1,
+            re.compile(r'Connection closed by invalid user [^\s]* (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1
         }
     }
 }
