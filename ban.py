@@ -140,7 +140,7 @@ def init():
     parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
     parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
     parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
-    parser.add_option('--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
+    parser.add_option('-d', '--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
     (options, _) = parser.parse_args()
 
     logging_level = logging.INFO

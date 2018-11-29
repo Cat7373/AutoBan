@@ -57,6 +57,12 @@ logs = {
         'regex': {
             re.compile(r'invalid request from (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}):\d+.*invalid user$'): 1
         }
+    },
+    'log/app3': {
+        'count': 2,
+        'regex': {
+            re.compile(r'Disconnected from invalid user [^\s*] (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}) port \d+'): 1
+        }
     }
 }
 # 配置文件
