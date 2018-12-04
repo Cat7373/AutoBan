@@ -11,8 +11,11 @@ import logging
 options = None
 
 
-# 执行 shell 命令
 def exec_cmd(cmd):
+    """
+    执行 shell 命令
+    :param cmd: 被执行的命令
+    """
     global options
 
     logging.info('exec: %s' % cmd)
@@ -20,8 +23,11 @@ def exec_cmd(cmd):
         os.system(cmd)
 
 
-# 读取日志中的 IP
 def read_log_ips():
+    """
+    读取日志文件中的 IP
+    :return: 从日志文件中读到的 IP 的迭代器
+    """
     for log_dir in conf.logs:
         dir_conf = conf.logs[log_dir]
 
@@ -36,13 +42,21 @@ def read_log_ips():
                         break
 
 
-# 读取配置文件中的 IP
 def read_conf_ips():
+    """
+    读配置文件中的 IP
+    :return: 从配置文件中读到的 IP 的迭代器
+    """
     return [ip for ip in read_lines(conf.confFile)]
 
 
 # 计算封禁的 IP 规则
 def calc_iptables_ban_rules(ips):
+    """
+    计算应该封禁的 IP 段列表
+    :param ips: IP 列表
+    :return: 应该封禁的 IP 段列表
+    """
     ban_ips = [ip2int(ip) for ip in ips]
     mask_bans = []
     for mask in range(len(conf.masks)):
@@ -82,17 +96,21 @@ def calc_iptables_ban_rules(ips):
 
 
 # 对比新老规则，做必要的规则修改
-def update_rules(old_rules, new_rules):
+def update_rules(old_ips, new_ips):
     # 应删除的规则
-    remove_rules = sub_list(old_rules, new_rules)
+    edit_rules(sub_list(old_ips, new_ips), mode='remove')
     # 应添加的规则
-    add_rules = sub_list(new_rules, old_rules)
+    edit_rules(sub_list(new_ips, old_ips), mode='add')
 
-    for ip in remove_rules:
-        for cmd in conf.gen_ban_cmd(ip, 'remove'):
-            exec_cmd(cmd)
-    for ip in add_rules:
-        for cmd in conf.gen_ban_cmd(ip, 'add'):
+
+def edit_rules(ips, mode):
+    """
+    编辑 iptables 的规则
+    :param ips: 执行规则的 IP 段列表
+    :param mode: 编辑的模式，add 或 remove
+    """
+    for ip in ips:
+        for cmd in conf.gen_ban_cmd(ip, mode):
             exec_cmd(cmd)
 
 
@@ -105,9 +123,16 @@ def main():
     # 读取配置文件中的 IP
     conf_ips = read_conf_ips()
 
+    # 调试日志
     logging.debug('log ips: %s' % log_ips)
     logging.debug('conf ips: %s' % conf_ips)
     logging.info('new ips: %s' % sub_list(log_ips, conf_ips))
+
+    if options.delete_rules:
+        logging.info('exec iptables rule cmds:')
+        edit_rules(calc_iptables_ban_rules(conf_ips), mode='remove')
+        logging.info('done.')
+        exit(0)
 
     # 合并去重排序
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
@@ -138,11 +163,13 @@ def main():
 
 def init():
     global options
-    parser = OptionParser()
+    parser = OptionParser(add_help_option=False)
+    parser.add_option("-h", "--help", action="help", help="显示这条帮助信息并退出")
     parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
     parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
     parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
-    parser.add_option('-d', '--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
+    parser.add_option('-d', '--delete-rules', action='store_true', dest='delete_rules', default=False, help='(尚未支持) 删除由本脚本添加的 iptables 规则(配置文件修改可能会造成旧规则无法被这个参数删除)')
+    parser.add_option('--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
     (options, _) = parser.parse_args()
 
     logging_level = logging.INFO
