@@ -72,8 +72,15 @@ confFile = 'conf/ips.txt'
 resetIptablesRules = """
 # 自动丢 rst
 /sbin/iptables -A INPUT -i eth0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,URG RST -j DROP
-# 在传输数据的直接放过，不执行下面的规则链
-/sbin/iptables -A INPUT -i eth0 -p tcp -m state --state ESTABLISHED -j ACCEPT
+# 重置 BAN_CHAIN
+/sbin/iptables -X BAN_CHAIN
+/sbin/iptables -N BAN_CHAIN
+# TCP 握手丢 BAN_CHAIN
+/sbin/iptables -A INPUT -i eth0 -p tcp --syn -g BAN_CHAIN
+# 其他 TCP 包直接过
+/sbin/iptables -A INPUT -i eth0 -p tcp -j ACCEPT
+# 其他包丢 BAN_CHAIN
+/sbin/iptables -A INPUT -i eth0 -g BAN_CHAIN
 """
 
 
@@ -86,8 +93,6 @@ def gen_ban_cmd(ip, mode):
     :return: 生成的命令的迭代器
     """
     if mode == 'add':
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p tcp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -A INPUT -s %s -i eth0 -p udp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -A BAN_CHAIN -s %s -i eth0 -j DROP' % ip
     elif mode == 'remove':
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p tcp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
-        yield '/sbin/iptables -D INPUT -s %s -i eth0 -p udp -m multiport --dports 22,7373,7374,7375 -m comment --comment autoban -j DROP' % ip
+        yield '/sbin/iptables -D BAN_CHAIN -s %s -i eth0 -j DROP' % ip
