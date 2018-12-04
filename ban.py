@@ -154,7 +154,7 @@ def main():
         # 重置 + 全量添加
         conf_ips = []
         exec_cmd('/sbin/iptables -F')
-        for cmd in filter(lambda c: len(c) > 0, conf.resetIptablesRules.split('\n')):
+        for cmd in filter(lambda c: len(c) > 0 and not c.strip().startswith('#'), conf.resetIptablesRules.split('\n')):
             exec_cmd(cmd)
     update_rules(calc_iptables_ban_rules(conf_ips), ban_ips)
 

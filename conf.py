@@ -68,9 +68,12 @@ logs = {
 }
 # 配置文件
 confFile = 'conf/ips.txt'
-# 重置时额外添加的规则
+# 重置时额外添加的规则, # 开头的行作为注释，不会被执行，# 前面可以有任意数量的空格，不会影响注释的判定，但不能有其他字符
 resetIptablesRules = """
+# 自动丢 rst
 /sbin/iptables -A INPUT -i eth0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,URG RST -j DROP
+# 在传输数据的直接放过，不执行下面的规则链
+/sbin/iptables -A INPUT -i eth0 -p tcp -m state --state ESTABLISHED -j ACCEPT
 """
 
 
