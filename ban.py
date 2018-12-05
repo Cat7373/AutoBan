@@ -97,7 +97,7 @@ def calc_iptables_ban_rules(ips):
 
 # 对比新老规则，做必要的规则修改
 def reset_rules(new_ips):
-    rule_file = conf.nfResetRule % new_ips.join(', ')
+    rule_file = conf.nfResetRule % ', '.join(new_ips)
     logging.info('generator rule file: \n%s' % rule_file)
     write_lines(conf.tmpRuleFile, rule_file)
     exec_cmd('/usr/sbin/nft -f %s' % conf.tmpRuleFile)
