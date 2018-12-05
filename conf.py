@@ -68,31 +68,17 @@ logs = {
 }
 # 配置文件
 confFile = 'conf/ips.txt'
-# 重置时额外添加的规则, # 开头的行作为注释，不会被执行，# 前面可以有任意数量的空格，不会影响注释的判定，但不能有其他字符
-resetIptablesRules = """
-# 自动丢 rst
-/sbin/iptables -A INPUT -i eth0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,URG RST -j DROP
-# 重置 BAN_CHAIN
-/sbin/iptables -X BAN_CHAIN
-/sbin/iptables -N BAN_CHAIN
-# TCP 握手丢 BAN_CHAIN
-/sbin/iptables -A INPUT -i eth0 -p tcp --syn -g BAN_CHAIN
-# 其他 TCP 包直接过
-/sbin/iptables -A INPUT -i eth0 -p tcp -j ACCEPT
-# 其他包丢 BAN_CHAIN
-/sbin/iptables -A INPUT -i eth0 -g BAN_CHAIN
+# 重置时生成的规则脚本，其中 %s 是用于存放生成的 ip 列表用的
+# 开头的行作为注释，不会被执行，# 前面可以有任意数量的空格，不会影响注释的判定，但不能有其他字符
+nfResetRule = """
+flush ruleset
+
+define autobans = { %s }
+
+add table autoban
+add chain autoban input { type filter hook input priority 0; }
+# TODO TCP 只拦截握手包，其余全部拦截
+add rule autoban input meta oifname eth0 ip saddr $autobans drop
 """
-
-
-# 如果需要改变封禁命令的端口、注释、或其他任何东西，请修改这个方法
-def gen_ban_cmd(ip, mode):
-    """
-    生成 iptables 的 cmd
-    :param ip: 目标 IP
-    :param mode: 模式，add 或 remove
-    :return: 生成的命令的迭代器
-    """
-    if mode == 'add':
-        yield '/sbin/iptables -A BAN_CHAIN -s %s -i eth0 -j DROP' % ip
-    elif mode == 'remove':
-        yield '/sbin/iptables -D BAN_CHAIN -s %s -i eth0 -j DROP' % ip
+# 生成的规则存放的临时文件
+tmpRuleFile = '/tmp/autoban_rule_file.nft'

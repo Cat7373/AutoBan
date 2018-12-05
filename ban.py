@@ -18,7 +18,7 @@ def exec_cmd(cmd):
     """
     global options
 
-    logging.info('exec: %s' % cmd)
+    logging.info('exec command: %s' % cmd)
     if not options.test:
         os.system(cmd)
 
@@ -96,22 +96,12 @@ def calc_iptables_ban_rules(ips):
 
 
 # 对比新老规则，做必要的规则修改
-def update_rules(old_ips, new_ips):
-    # 应删除的规则
-    edit_rules(sub_list(old_ips, new_ips), mode='remove')
-    # 应添加的规则
-    edit_rules(sub_list(new_ips, old_ips), mode='add')
-
-
-def edit_rules(ips, mode):
-    """
-    编辑 iptables 的规则
-    :param ips: 执行规则的 IP 段列表
-    :param mode: 编辑的模式，add 或 remove
-    """
-    for ip in ips:
-        for cmd in conf.gen_ban_cmd(ip, mode):
-            exec_cmd(cmd)
+def reset_rules(new_ips):
+    rule_file = conf.nfResetRule % new_ips.join(', ')
+    logging.info('generator rule file: \n%s' % rule_file)
+    write_lines(conf.tmpRuleFile, rule_file)
+    exec_cmd('/usr/sbin/nft -f %s' % conf.tmpRuleFile)
+    os.remove(conf.tmpRuleFile)
 
 
 # TODO IPv6?
@@ -128,12 +118,6 @@ def main():
     logging.debug('conf ips: %s' % conf_ips)
     logging.info('new ips: %s' % sub_list(log_ips, conf_ips))
 
-    if options.delete_rules:
-        logging.info('exec iptables rule cmds:')
-        edit_rules(calc_iptables_ban_rules(conf_ips), mode='remove')
-        logging.info('done.')
-        exit(0)
-
     # 合并去重排序
     new_ips = sorted(filter(lambda s: len(s) > 0, list(set(log_ips + conf_ips))), key=ip2int)
 
@@ -146,17 +130,7 @@ def main():
     logging.debug('ban_ips: %s' % ban_ips)
 
     # 应用到 iptables 中
-    logging.info('exec iptables rule cmds:')
-    if options.init_rules:
-        # 全量添加
-        conf_ips = []
-    if options.reset_rules:
-        # 重置 + 全量添加
-        conf_ips = []
-        exec_cmd('/sbin/iptables -F')
-        for cmd in filter(lambda c: len(c) > 0 and not c.strip().startswith('#'), conf.resetIptablesRules.split('\n')):
-            exec_cmd(cmd)
-    update_rules(calc_iptables_ban_rules(conf_ips), ban_ips)
+    reset_rules(ban_ips)
 
     logging.info('done.')
 
@@ -166,9 +140,6 @@ def init():
     parser = OptionParser(add_help_option=False)
     parser.add_option("-h", "--help", action="help", help="显示这条帮助信息并退出")
     parser.add_option('-t', '--test', action='store_true', dest='test', default=False, help='测试运行，不实际做任何修改')
-    parser.add_option('-i', '--init-rules', action='store_true', dest='init_rules', default=False, help='初始化 iptables 规则')
-    parser.add_option('-r', '--reset-rules', action='store_true', dest='reset_rules', default=False, help='重置 iptables 规则')
-    parser.add_option('-d', '--delete-rules', action='store_true', dest='delete_rules', default=False, help='(尚未支持) 删除由本脚本添加的 iptables 规则(配置文件修改可能会造成旧规则无法被这个参数删除)')
     parser.add_option('--debug', action='store_true', dest='debug', default=False, help='开启调试日志输出')
     (options, _) = parser.parse_args()
 
