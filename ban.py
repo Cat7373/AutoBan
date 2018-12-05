@@ -76,8 +76,8 @@ def calc_iptables_ban_rules(ips):
 
         # 各个段的 IP 数
         mask_ip_count = {}
-        for ip in ban_ips:
-            key = ip >> shr
+        for ban_ip in ban_ips:
+            key = ban_ip >> shr
             val = mask_ip_count.get(key)
             if val is None:
                 val = 0
@@ -87,9 +87,9 @@ def calc_iptables_ban_rules(ips):
             if v < min_ip_count:
                 continue
             mask_bans.append((k, mask))
-            remove_ips = filter(lambda ip: ip >> shr == k, ban_ips)
-            for ip in remove_ips:
-                ban_ips.remove(ip)
+            remove_ips = [x for x in filter(lambda ip: ip >> shr == k, ban_ips)]
+            for remove_ip in remove_ips:
+                ban_ips.remove(remove_ip)
     for ip in ban_ips:
         mask_bans.append((ip, 32))
     return ['%s/%d' % (int2ip(t[0] << (32 - t[1])), t[1]) for t in mask_bans]

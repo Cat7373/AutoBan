@@ -73,12 +73,12 @@ confFile = 'conf/ips.txt'
 nfResetRule = """
 flush ruleset
 
-define autobans = { %s }
+define autobanIps = { %s }
 
 add table autoban
 add chain autoban input { type filter hook input priority 0; }
 # TODO TCP 只拦截握手包，其余全部拦截
-add rule autoban input meta oifname eth0 ip saddr $autobans drop
+add rule autoban input meta oifname eth0 ip saddr $autobanIps drop
 """
 # 生成的规则存放的临时文件
 tmpRuleFile = '/tmp/autoban_rule_file.nft'
