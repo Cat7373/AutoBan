@@ -49,7 +49,9 @@ logs = {
         'count': 2,
         # 匹配用的正则: 第几个 group 是 IP 地址
         'regex': {
-            re.compile(r'(([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$'): 1
+            re.compile(r'failed to handshake with (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): authentication error$'): 1,
+            re.compile(r'failed to handshake with (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): invalid address type$'): 1,
+            re.compile(r'failed to handshake with (([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])(\.([1-9]?\d|1\d{2}|2[0-4]\d|25[0-5])){3}): invalid host name$'): 1
         }
     },
     'log/app2': {
