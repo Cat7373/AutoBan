@@ -77,6 +77,7 @@ define autobanIps = { %s }
 
 add table autoban
 add chain autoban input { type filter hook input priority 0; }
+# TODO 拦 rst 包
 # TODO TCP 只拦截握手包，其余全部拦截
 add rule autoban input meta oifname eth0 ip saddr $autobanIps drop
 """
