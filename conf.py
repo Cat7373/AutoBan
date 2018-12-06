@@ -75,10 +75,16 @@ flush ruleset
 
 define autobanIps = { %s }
 
+# 创建 table 和 chain
 add table autoban
 add chain autoban input { type filter hook input priority 0; }
-# TODO 拦 rst 包
-# TODO TCP 只拦截握手包，其余全部拦截
+
+# 拦 rst 包
+add rule autoban input tcp flags & rst == rst drop
+# TCP 非握手包直接放过
+add rule autoban input tcp flags != syn accept
+
+# 拦截规则
 add rule autoban input meta oifname eth0 ip saddr $autobanIps drop
 """
 # 生成的规则存放的临时文件
