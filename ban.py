@@ -4,6 +4,7 @@
 
 from funcs import *
 import conf
+import time
 from optparse import OptionParser
 import logging
 
@@ -97,11 +98,12 @@ def calc_iptables_ban_rules(ips):
 
 # 对比新老规则，做必要的规则修改
 def reset_rules(new_ips):
-    rule_file = conf.nfResetRule % ', '.join(new_ips)
-    logging.debug('generator rule file: \n%s' % rule_file)
-    write_lines(conf.tmpRuleFile, [rule_file])
-    exec_cmd('/usr/sbin/nft -f %s' % conf.tmpRuleFile)
-    os.remove(conf.tmpRuleFile)
+    rule_data = conf.nfResetRule % ', '.join(new_ips)
+    rule_file_name = conf.tmpRuleFile % time.time()
+    logging.debug('generator rule file: \n%s' % rule_data)
+    write_lines(rule_file_name, [rule_data])
+    exec_cmd('/usr/sbin/nft -f %s' % rule_file_name)
+    os.remove(rule_file_name)
 
 
 # TODO IPv6?

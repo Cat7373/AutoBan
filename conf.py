@@ -73,6 +73,8 @@ confFile = 'conf/ips.txt'
 # 重置时生成的规则脚本，其中 %s 是用于存放生成的 ip 列表用的
 # 开头的行作为注释，不会被执行，# 前面可以有任意数量的空格，不会影响注释的判定，但不能有其他字符
 nfResetRule = """
+#!/usr/sbin/nft -f
+
 flush ruleset
 
 define autobanIps = { %s }
@@ -82,12 +84,12 @@ add table autoban
 add chain autoban input { type filter hook input priority 0; }
 
 # 拦 rst 包
-add rule autoban input tcp flags & rst == rst drop
+add rule autoban input tcp flags rst drop
 # TCP 非握手包直接放过
-add rule autoban input tcp flags != syn accept
+add rule autoban input tcp flags ne syn accept
 
 # 拦截规则
 add rule autoban input meta oifname eth0 ip saddr $autobanIps drop
 """
-# 生成的规则存放的临时文件
-tmpRuleFile = '/tmp/autoban_rule_file.nft'
+# 生成的规则存放的临时文件，中间需要有一个 %s 用于被替换为时间字符串
+tmpRuleFile = '/tmp/autoban_rule_file.%s.nft'
