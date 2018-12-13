@@ -83,13 +83,15 @@ define autobanIps = { %s }
 add table autoban
 add chain autoban input { type filter hook input priority 0; }
 
+# 非目标接口直接放过
+add rule autoban input meta iifname ne eth0 accept
 # 拦 rst 包
 add rule autoban input tcp flags rst drop
 # TCP 非握手包直接放过
 add rule autoban input tcp flags ne syn accept
 
 # 拦截规则
-add rule autoban input meta oifname eth0 ip saddr $autobanIps drop
+add rule autoban input ip saddr $autobanIps drop
 """
 # 生成的规则存放的临时文件，中间需要有一个 %s 用于被替换为时间字符串
 tmpRuleFile = '/tmp/autoban_rule_file.%s.nft'
